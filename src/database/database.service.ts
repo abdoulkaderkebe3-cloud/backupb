@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProfessorEntity } from './entities/professor.entity';
+import { EvaluationEntity } from './entities/evaluation.entity';
 
 export interface Professor {
   id: string;
@@ -23,72 +25,37 @@ export interface Evaluation {
   comment?: string;
 }
 
-export interface DatabaseData {
-  professors: Professor[];
-  evaluations: Evaluation[];
-}
-
 @Injectable()
 export class DatabaseService implements OnModuleInit {
-  private readonly dbPath = path.join(process.cwd(), 'data', 'db.json');
-  private readonly dataDir = path.join(process.cwd(), 'data');
+  constructor(
+    @InjectRepository(ProfessorEntity)
+    private professorsRepository: Repository<ProfessorEntity>,
+    @InjectRepository(EvaluationEntity)
+    private evaluationsRepository: Repository<EvaluationEntity>,
+  ) {}
 
   async onModuleInit() {
-    await this.initDatabase();
-  }
-
-  private async initDatabase() {
-    try {
-      await fs.mkdir(this.dataDir, { recursive: true });
-      try {
-        await fs.access(this.dbPath);
-      } catch {
-        // File doesn't exist, create it with default structure
-        const defaultData: DatabaseData = { professors: [], evaluations: [] };
-        await fs.writeFile(this.dbPath, JSON.stringify(defaultData, null, 2));
-      }
-    } catch (error) {
-      console.error('Failed to initialize database', error);
-    }
-  }
-
-  async readData(): Promise<DatabaseData> {
-    try {
-      const content = await fs.readFile(this.dbPath, 'utf8');
-      return JSON.parse(content);
-    } catch (error) {
-      console.error('Failed to read database', error);
-      return { professors: [], evaluations: [] };
-    }
-  }
-
-  async writeData(data: DatabaseData): Promise<void> {
-    try {
-      await fs.writeFile(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error('Failed to write database', error);
-    }
+    // TypeORM handles table creation via synchronize: true
   }
 
   async getProfessors(): Promise<Professor[]> {
-    const data = await this.readData();
-    return data.professors;
+    return this.professorsRepository.find();
   }
 
   async saveProfessors(professors: Professor[]): Promise<void> {
-    const data = await this.readData();
-    data.professors = professors;
-    await this.writeData(data);
+    // We use chunking to avoid too many parameters in a single SQL query
+    const chunkSize = 500;
+    for (let i = 0; i < professors.length; i += chunkSize) {
+      const chunk = professors.slice(i, i + chunkSize);
+      await this.professorsRepository.save(chunk);
+    }
   }
 
   async addEvaluation(evaluation: Evaluation): Promise<void> {
-    const data = await this.readData();
-    data.evaluations.push(evaluation);
-    await this.writeData(data);
+    await this.evaluationsRepository.save(evaluation);
   }
 
   async getEvaluations(): Promise<Evaluation[]> {
-    const data = await this.readData();
-    return data.evaluations;
+    return this.evaluationsRepository.find();
   }
 }

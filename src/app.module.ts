@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from './database/database.module';
 import { ExcelModule } from './excel/excel.module';
 import { AuthModule } from './auth/auth.module';
@@ -22,6 +23,19 @@ import { AdminController } from './admin/admin.controller';
       ttl: 60000,
       limit: 60,
     }]),
+
+    // TypeORM Configuration for PostgreSQL (Supabase)
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        autoLoadEntities: true,
+        synchronize: true, // Auto-create tables (ok for simple projects, switch to migrations for prod)
+        ssl: { rejectUnauthorized: false }, // Required for Supabase pooling/remote connection
+      }),
+      inject: [ConfigService],
+    }),
 
     DatabaseModule,
     ExcelModule,
