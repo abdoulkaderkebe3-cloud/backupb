@@ -1,4 +1,4 @@
-# UPB Analyse — Backend API
+# UPB — Backend API
 
 API NestJS sécurisée pour le système d'évaluation des enseignants de l'UPB.
 
