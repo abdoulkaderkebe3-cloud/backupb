@@ -9,6 +9,9 @@
 # data
 /data
 
+# one-off DB admin script with a hardcoded credential — never commit
+grant_perms.js
+
 # logs
 logs
 *.log

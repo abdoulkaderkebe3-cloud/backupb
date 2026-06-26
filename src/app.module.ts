@@ -31,8 +31,13 @@ import { AdminController } from './admin/admin.controller';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: true, // Auto-create tables (ok for simple projects, switch to migrations for prod)
-        ssl: { rejectUnauthorized: false }, // Required for Supabase pooling/remote connection
+        synchronize: true,
+        ssl: { rejectUnauthorized: false },
+        extra: {
+          max: 2, // Small pool for serverless
+          connectionTimeoutMillis: 5000,
+          idleTimeoutMillis: 10000,
+        },
       }),
       inject: [ConfigService],
     }),

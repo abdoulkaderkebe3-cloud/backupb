@@ -1,15 +1,18 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
+    { "src": "/api/ping", "dest": "/api/ping.js" },
+    { "src": "/api/professors/levels", "dest": "/api/professors/levels.js" },
+    { "src": "/api/professors", "dest": "/api/professors/index.js" },
+    { "src": "/api/evaluate", "dest": "/api/evaluate.js", "methods": ["POST", "OPTIONS"] },
+    { "src": "/api/admin/login", "dest": "/api/admin/login.js", "methods": ["POST", "OPTIONS"] },
+    { "src": "/api/results/(.*)", "dest": "/api/results/[...path].js" },
+    { "src": "/api/results", "dest": "/api/results/[...path].js" }
+  ],
+  "crons": [
     {
-      "src": "/(.*)",
-      "dest": "api/index.ts"
+      "path": "/api/ping",
+      "schedule": "0 0 * * *"
     }
   ]
 }

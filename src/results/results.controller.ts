@@ -104,9 +104,16 @@ export class ResultsController {
       });
     }
 
+    const courseById = new Map(profEntries.map(p => [p.id, p.course]));
     const comments = profEvals
       .filter(e => e.comment && e.comment.trim().length > 0)
-      .map(e => ({ date: e.timestamp, comment: e.comment }));
+      .map(e => ({
+        date: e.timestamp,
+        comment: e.comment,
+        level: e.level,
+        className: e.className,
+        course: courseById.get(e.professorId) || null,
+      }));
 
     // Aggregate unique courses and classes
     const courses = [...new Set(profEntries.map(p => p.course))];
@@ -156,9 +163,16 @@ export class ResultsController {
       });
     }
 
+    const courseById = new Map(allProfEntries.map(p => [p.id, p.course]));
     const comments = profEvals
       .filter(e => e.comment && e.comment.trim().length > 0)
-      .map(e => ({ date: e.timestamp, comment: e.comment }));
+      .map(e => ({
+        date: e.timestamp,
+        comment: e.comment,
+        level: e.level,
+        className: e.className,
+        course: courseById.get(e.professorId) || null,
+      }));
 
     return {
       professor: {
